@@ -54,7 +54,8 @@ export function LogEntryForm({
     editingEvent, onDoneEditing,
 }) {
     const isEditing = !!editingEvent;
-
+    const [usageCounts, setUsageCounts] = useState({});
+    useEffect(() => { getChipUsage().then(setUsageCounts); }, []);
     const availableTypes = MANUAL_ENTRY_TYPES.filter((t) => !lockedPlantingId || scopeOf(t) !== "garden");
     const primaryTypes = sortByUsage(MANUAL_ENTRY_PRIMARY.filter((t) => availableTypes.includes(t)), usageCounts);
     const moreGroups = MANUAL_ENTRY_MORE_GROUPS
@@ -102,8 +103,6 @@ export function LogEntryForm({
         if (formOpen && type === nextType) { closeForm(); return; }
         openForType(nextType);
     };
-    const [usageCounts, setUsageCounts] = useState({});
-    useEffect(() => { getChipUsage().then(setUsageCounts); }, []);
     // Keep a sensible default target selected as the plant list loads in —
     // skipped when locked to one plant/container, or for container-scoped
     // types (no reminder signal to default from yet).
