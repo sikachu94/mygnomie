@@ -84,11 +84,11 @@ Allowed event types, grouped by what they target:
 
 Planting-scoped (set planting_id, leave container_id null):
   watering, fertilizing, pruning, growth_measurement, harvest, pest_sighting, disease_sighting,
-  pest_treatment, disease_treatment, inspection, photo_log, transplanted
+  pest_treatment, disease_treatment, inspection, photo_log, transplanted, germination, thinning
 
 Container-scoped (set container_id, leave planting_id null) — a "container" includes pots as well
 as raised beds and in-ground garden plots, not just potted containers:
-  relocated, soil_amended, weeding
+  relocated, soil_amended, weeding, soil_test, weather_protection
 
 Garden-scoped (leave both planting_id and container_id null):
   rainfall, frost, garden_event
@@ -100,6 +100,13 @@ Every payload field is optional — only include the ones the note actually supp
 pest_treatment / disease_treatment are for when the gardener describes *doing something about* a pest or
 disease (spraying, removing it by hand, etc.) — use pest_sighting / disease_sighting instead when they're
 just reporting that they *saw* one.
+germination is for a from-seed planting reporting how/when it sprouted (days_to_germinate,
+germination_rate) — only relevant early in that planting's life.
+thinning is for removing excess seedlings from a crowded sowing (removed_count, reason).
+soil_test is a pH/moisture reading taken on a container's soil — distinct from soil_amended,
+which is for actually changing the soil.
+weather_protection is what the gardener did in response to weather (action: covered,
+moved_indoors, or shade_provided; trigger: what prompted it, e.g. frost or heat).
 inspection is for a routine "checked, it's fine" note with nothing else to report.
 Never propose photo_log from text alone — photos are attached by the user directly, not inferred.
 If the note describes more than one distinct thing, include multiple items in "drafts".

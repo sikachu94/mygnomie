@@ -1973,3 +1973,77 @@ body,
   min-width: 28px;
   min-height: 28px;
 }
+
+/* ---------- Frost protection prompt — an actionable banner, not a modal ---------- */
+.sg-frost-prompt {
+  margin: 0 18px 14px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-left: 3px solid #4B8BBF;
+  border-radius: 10px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sg-frost-prompt-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.sg-frost-prompt-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* ==========================================================================
+   Additions for the expanded log-entry taxonomy (fertilizing, pruning,
+   pest/disease treatment, inspection, weeding, and manual relocated/
+   soil_amended/transplanted entries) — append these to the end of
+   frontend/styles.css. Everything here reuses existing CSS variables
+   (--moss, --gold, --clay, --line, --muted) already defined on .sg-root;
+   no new variables are introduced except the two-off fertilize accent
+   colors below, kept local to their rules rather than promoted to
+   :root/--vars since nothing else references them.
+   ========================================================================== */
+
+/* "More" overflow beneath the primary log-entry chip row (LogEntryForm.jsx) */
+.sg-entry-more-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+
+.sg-entry-more-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* Fertilize reminder card accent, matching the existing
+   .sg-reminder-water / .sg-reminder-harvest / .sg-reminder-issue pattern */
+.sg-reminder-fertilize {
+  border-left: 3px solid #6B7F3A;
+}
+
+.sg-reminder-fertilize .sg-reminder-icon {
+  color: #6B7F3A;
+}
+
+/* Fertilizing task accents on the garden calendar, matching the existing
+   .sg-calendar-dot.watering / .sg-calendar-task-icon.watering pattern */
+.sg-calendar-dot.fertilizing {
+  background: #6B7F3A;
+}
+
+.sg-calendar-task-icon.fertilizing {
+  color: #6B7F3A;
+}

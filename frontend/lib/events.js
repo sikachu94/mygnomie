@@ -22,6 +22,10 @@ export const EVENT_TYPES = {
   relocated: { category: "lifecycle", scope: "container", fields: "new_placement?, sun_exposure_hours?" },
   soil_amended: { category: "lifecycle", scope: "container", fields: "trigger?, new_volume_l?" },
   weeding: { category: "action", scope: "container", fields: "method?, area?" },
+  soil_test: { category: "measurement", scope: "container", fields: "ph?, moisture_pct?, method?" },
+  weather_protection: { category: "action", scope: "container", fields: "action?, trigger?" },
+  germination: { category: "observation", scope: "planting", fields: "days_to_germinate?, germination_rate?" },
+  thinning: { category: "action", scope: "planting", fields: "removed_count?, reason?" },
   rainfall: { category: "measurement", scope: "garden", fields: "amount_mm" },
   frost: { category: "observation", scope: "garden", fields: "severity?" },
   garden_event: { category: "observation", scope: "garden", fields: "note" },
@@ -64,6 +68,10 @@ export const EVENT_TYPE_LABELS = {
   soil_amended: "Soil changed",
   weeding: "Weeded",
   transplanted: "Transplanted",
+  soil_test: "Soil tested",
+  weather_protection: "Weather protection",
+  germination: "Germinated",
+  thinning: "Thinned",
   garden_event: "Garden Event",
 };
 
@@ -93,7 +101,8 @@ export const MANUAL_ENTRY_PRIMARY = [
 
 export const MANUAL_ENTRY_MORE_GROUPS = [
   { label: "Treat", types: ["pest_treatment", "disease_treatment"] },
-  { label: "Container", types: ["relocated", "soil_amended", "weeding", "transplanted"] },
+  { label: "Container", types: ["relocated", "soil_amended", "weeding", "transplanted", "soil_test", "weather_protection"] },
+  { label: "Growth", types: ["germination", "thinning"] },
   { label: "Record", types: ["growth_measurement", "garden_event"] },
 ];
 
@@ -122,6 +131,10 @@ export const MANUAL_ENTRY_LABELS = {
   soil_amended: "Amend soil",
   weeding: "Weed",
   transplanted: "Transplant",
+  soil_test: "Soil test",
+  weather_protection: "Protect",
+  germination: "Germination",
+  thinning: "Thin seedlings",
 };
 
 // Field definitions for the manual log-entry form. Each field is
@@ -202,6 +215,23 @@ export const MANUAL_ENTRY_FIELDS = {
     // static <select> — see the field.key === "to_container_id" special case.
     { key: "to_container_id", label: "Move to container", kind: "select", options: [] },
     { key: "reason", label: "Reason", kind: "text", placeholder: "optional" },
+  ],
+  soil_test: [
+    { key: "ph", label: "Soil pH", kind: "number" },
+    { key: "moisture_pct", label: "Moisture (%)", kind: "number" },
+    { key: "method", label: "Method", kind: "select", options: ["probe", "strip", "meter", "visual"] },
+  ],
+  weather_protection: [
+    { key: "action", label: "What did you do?", kind: "select", options: ["covered", "moved_indoors", "shade_provided"] },
+    { key: "trigger", label: "Why", kind: "select", options: ["frost", "heat", "wind", "hail"] },
+  ],
+  germination: [
+    { key: "days_to_germinate", label: "Days to germinate", kind: "number" },
+    { key: "germination_rate", label: "Germination rate (%)", kind: "number" },
+  ],
+  thinning: [
+    { key: "removed_count", label: "Seedlings removed", kind: "number" },
+    { key: "reason", label: "Reason", kind: "text", placeholder: "optional, e.g. overcrowded" },
   ],
 };
 
@@ -292,8 +322,25 @@ export function describeEventPayload(eventType, payload = {}) {
       return payload.severity || null;
     case "growth_measurement":
       return payload.metric ? `${payload.metric}: ${payload.value ?? "—"}${payload.unit ? ` ${payload.unit}` : ""}` : null;
+    case "soil_test":
+      return payload.ph != null
+        ? `pH ${payload.ph}${payload.moisture_pct != null ? `, ${payload.moisture_pct}% moisture` : ""}`
+        : payload.moisture_pct != null ? `${payload.moisture_pct}% moisture` : payload.method || null;
+    case "weather_protection":
+      return payload.action
+        ? `${payload.action.replace(/_/g, " ")}${payload.trigger ? ` — ${payload.trigger}` : ""}`
+        : payload.trigger || null;
+    case "germination":
+      return payload.days_to_germinate
+        ? `Germinated in ${payload.days_to_germinate}d${payload.germination_rate ? `, ${payload.germination_rate}% rate` : ""}`
+        : payload.germination_rate ? `${payload.germination_rate}% germination rate` : null;
+    case "thinning":
+      return payload.removed_count
+        ? `Removed ${payload.removed_count}${payload.reason ? ` — ${payload.reason}` : ""}`
+        : payload.reason || null;
     default:
       return null;
+
   }
 }
 

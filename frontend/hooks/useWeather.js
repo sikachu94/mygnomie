@@ -1,18 +1,17 @@
 import { useState, useEffect, useCallback } from "react";
 import { GARDEN_ID } from "../lib/seedData.js";
 import { uid } from "../lib/format.js";
+import { buildManualEvents } from "../lib/events.js";
 
-/**
- * Owns weather state + the garden's location, and auto-logs rainfall/frost
- * garden_events when the forecast crosses a threshold. Needs read access to
- * `events` (to avoid duplicate auto-events) and `addEvent`/`updateGardenAndPersist`
- * from useGardenData.
- */
 export function useWeather({ garden, events, addEvent, updateGardenAndPersist }) {
   const [weather, setWeather] = useState(null);
   const [weatherError, setWeatherError] = useState(null);
   const [locating, setLocating] = useState(false);
   const [weatherTick, setWeatherTick] = useState(0);
+  // { severity: "light" | "hard" } once today's frost has been auto-logged
+  // and nobody's said whether anything got covered — cleared by
+  // logWeatherProtection or dismissFrostPrompt.
+  const [frostPrompt, setFrostPrompt] = useState(null);
 
   useEffect(() => {
     if (!garden?.location) return;
@@ -37,7 +36,9 @@ export function useWeather({ garden, events, addEvent, updateGardenAndPersist })
           auto.push({ id: uid("evt"), timestamp: new Date().toISOString(), garden_id: GARDEN_ID, entity_type: "garden", entity_id: GARDEN_ID, category: "measurement", source: "external", event_type: "rainfall", payload: { amount_mm: precipToday }, confidence: "observed" });
         }
         if (!alreadyFrost && typeof minTemp === "number" && minTemp < 0) {
-          auto.push({ id: uid("evt"), timestamp: new Date().toISOString(), garden_id: GARDEN_ID, entity_type: "garden", entity_id: GARDEN_ID, category: "observation", source: "external", event_type: "frost", payload: { severity: minTemp < -3 ? "hard" : "light" }, confidence: "observed" });
+          const severity = minTemp < -3 ? "hard" : "light";
+          auto.push({ id: uid("evt"), timestamp: new Date().toISOString(), garden_id: GARDEN_ID, entity_type: "garden", entity_id: GARDEN_ID, category: "observation", source: "external", event_type: "frost", payload: { severity }, confidence: "observed" });
+          setFrostPrompt({ severity });
         }
         if (auto.length) addEvent(auto);
       } catch (err) {
@@ -71,5 +72,31 @@ export function useWeather({ garden, events, addEvent, updateGardenAndPersist })
   const refresh = useCallback(() => setWeatherTick((t) => t + 1), []);
   const reset = useCallback(() => { setWeather(null); setWeatherError(null); }, []);
 
-  return { weather, weatherError, locating, setGardenLocation, clearGardenLocation, useMyLocation, refresh, reset };
+  /**
+   * Logs a weather_protection event (container-scoped) for each selected
+   * container, then dismisses the prompt. `action` is one of "covered" |
+   * "moved_indoors" | "shade_provided". Uses garden.id (the real Supabase
+   * id) rather than the seedData GARDEN_ID constant, since these events
+   * need to pass ownership verification against the caller's actual garden.
+   */
+  const logWeatherProtection = useCallback(async (containerIds, action) => {
+    if (!containerIds?.length || !garden?.id) return;
+    const built = buildManualEvents({
+      eventType: "weather_protection",
+      gardenId: garden.id,
+      targetIds: containerIds,
+      payload: { action, trigger: "frost" },
+    });
+    await addEvent(built);
+    setFrostPrompt(null);
+  }, [addEvent, garden]);
+
+  const dismissFrostPrompt = useCallback(() => setFrostPrompt(null), []);
+
+  return {
+    weather, weatherError, locating, frostPrompt,
+    setGardenLocation, clearGardenLocation, useMyLocation,
+    logWeatherProtection, dismissFrostPrompt,
+    refresh, reset,
+  };
 }

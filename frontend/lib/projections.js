@@ -6,15 +6,16 @@ export function projectContainer(container, events) {
   const setup = own.find((e) => e.event_type === "container_setup");
   const lastRelocate = [...own].reverse().find((e) => e.event_type === "relocated");
   const lastSoilAmend = [...own].reverse().find((e) => e.event_type === "soil_amended");
+  const lastSoilTest = [...own].reverse().find((e) => e.event_type === "soil_test");
   const coverEvent = [...own].reverse().find((e) => e.media?.length);
   return {
     placement: lastRelocate?.payload?.new_placement || setup?.payload?.initial_placement || "Unspecified",
     soil_composition: lastSoilAmend?.payload?.new_soil_composition || setup?.payload?.initial_soil_composition || [],
-    // A relocate can also update sun exposure (e.g. moved to a shadier
-    // spot) — prefer the latest relocate's value, falling back to whatever
-    // was recorded at setup.
     sun_exposure_hours: lastRelocate?.payload?.sun_exposure_hours ?? setup?.payload?.sun_exposure_hours,
     cover_image: coverEvent?.media?.[0],
+    last_soil_ph: lastSoilTest?.payload?.ph,
+    last_soil_moisture_pct: lastSoilTest?.payload?.moisture_pct,
+    last_soil_test_at: lastSoilTest?.timestamp,
   };
 }
 

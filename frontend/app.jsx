@@ -12,6 +12,7 @@ import { CaptureTab } from "./components/CaptureTab.jsx";
 import { PlantsTab } from "./components/PlantsTab.jsx";
 import { ChatTab } from "./components/ChatTab.jsx";
 import { useToast, Toast } from "./lib/toast.jsx";
+import { WeatherProtectionPrompt } from "./components/WeatherProtectionPrompt.jsx";
 
 const TABS = [
   { id: "capture", icon: NotebookPen, shortLabel: "Log" },
@@ -48,8 +49,9 @@ export default function App() {
   } = useGardenData(!!auth.session);
 
   const {
-    weather, weatherError, locating,
+    weather, weatherError, locating, frostPrompt,
     setGardenLocation, clearGardenLocation, useMyLocation,
+    logWeatherProtection, dismissFrostPrompt,
     refresh: refreshWeather, reset: resetWeather,
   } = useWeather({ garden, events: events || [], addEvent, updateGardenAndPersist });
 
@@ -165,7 +167,21 @@ export default function App() {
           </button>
         </div>
       )}
-
+      {frostPrompt && containers.length > 0 && (
+        <WeatherProtectionPrompt
+          prompt={frostPrompt}
+          containers={containers}
+          onLog={async (ids, action) => {
+            try {
+              await logWeatherProtection(ids, action);
+              showToast("Logged.");
+            } catch (err) {
+              showToast("Couldn't save that — try again.", "error");
+            }
+          }}
+          onDismiss={dismissFrostPrompt}
+        />
+      )}
       <main className="sg-main">
         <div hidden={tab !== "capture"}>
           <CaptureTab

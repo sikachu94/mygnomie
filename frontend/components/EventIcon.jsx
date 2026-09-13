@@ -1,6 +1,7 @@
 import {
   Droplets, Scissors, Bug, CloudRain, Snowflake, Camera, Ruler, NotebookPen, Sparkles,
   FlaskConical, Leaf, ShieldCheck, Stethoscope, Eye, Shovel, Move, Layers, ArrowRightLeft,
+  Thermometer, Umbrella, Sprout, MinusCircle,
 } from "lucide-react";
 import { isAlertEvent } from "../lib/events.js";
 
@@ -23,6 +24,11 @@ const ICON_BY_TYPE = {
   soil_amended: Layers,
   weeding: Shovel,
   transplanted: ArrowRightLeft,
+  soil_test: Thermometer,
+  weather_protection: Umbrella,
+  germination: Sprout,
+  thinning: MinusCircle,
+
 };
 
 // Which color a given event's stamp gets. Alerts (see isAlertEvent) always
@@ -34,6 +40,7 @@ const STAMP_COLOR_BY_TYPE = {
   harvest: "gold",
   growth_measurement: "gold",
   frost: "gold",
+  soil_test: "gold",
 };
 
 export function EventIcon({ type, size = 34 }) {
