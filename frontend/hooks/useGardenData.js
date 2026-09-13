@@ -184,7 +184,12 @@ export function useGardenData(authEnabled = true) {
     const plantingSetupEvent = {
       id: uid("evt"), timestamp: now, garden_id: gardenId, entity_type: "planting", entity_id: planting.id,
       category: "lifecycle", source: "self", event_type: "planting_setup",
-      payload: { container_id: containerIdForEvents, entry_stage: form.entry_stage, acquisition_source: form.acquisition_source },
+      payload: {
+        container_id: containerIdForEvents,
+        entry_stage: form.entry_stage,
+        acquisition_source: form.acquisition_source,
+        source_planting_id: form.source_planting_id || undefined,
+      },
       media: form.photo ? [form.photo] : undefined,
       confidence: "observed",
     };

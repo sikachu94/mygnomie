@@ -26,9 +26,11 @@ export const EVENT_TYPES = {
   weather_protection: { category: "action", scope: "container", fields: "action?, trigger?" },
   germination: { category: "observation", scope: "planting", fields: "days_to_germinate?, germination_rate?" },
   thinning: { category: "action", scope: "planting", fields: "removed_count?, reason?" },
+  weather_event: { category: "observation", scope: "garden", fields: "subtype, severity?, temp_c?, wind_kph?" },
   rainfall: { category: "measurement", scope: "garden", fields: "amount_mm" },
   frost: { category: "observation", scope: "garden", fields: "severity?" },
   garden_event: { category: "observation", scope: "garden", fields: "note" },
+  
 };
 
 export const scopeOf = (eventType) => EVENT_TYPES[eventType]?.scope || "planting";
@@ -70,6 +72,7 @@ export const EVENT_TYPE_LABELS = {
   transplanted: "Transplanted",
   soil_test: "Soil tested",
   weather_protection: "Weather protection",
+  weather_event: "Weather event",
   germination: "Germinated",
   thinning: "Thinned",
   garden_event: "Garden Event",
@@ -338,6 +341,10 @@ export function describeEventPayload(eventType, payload = {}) {
       return payload.removed_count
         ? `Removed ${payload.removed_count}${payload.reason ? ` — ${payload.reason}` : ""}`
         : payload.reason || null;
+    case "weather_event":
+      return payload.subtype
+        ? `${payload.subtype}${payload.severity ? ` · ${payload.severity}` : ""}`
+        : null;
     default:
       return null;
 

@@ -12,6 +12,7 @@ import { PlantSearch } from "./PlantSearch.jsx";
 const blankSoilRow = () => ({ id: uid("soil"), component: "", percent: 0 });
 const blankNewPlanting = () => ({
   nickname: "", species: "", plant: null, entry_stage: "seedling", acquisition_source: "purchased_seedling",
+  source_planting_id: "",
   containerMode: "new", containerId: "", containerType: "pot", material: "terracotta", containerSize: "", placement: "",
   soilComposition: [{ id: uid("soil"), component: "Potting mix", percent: 100 }],
   photo: null,
@@ -317,6 +318,20 @@ export function PlantsTab({
               <div className="sg-draft-row">
                 <select value={newPlanting.acquisition_source} onChange={(e) => setNewPlanting((n) => ({ ...n, acquisition_source: e.target.value }))}>{ACQUISITION.map((a) => <option key={a} value={a}>{ACQUISITION_LABELS[a]}</option>)}</select>
               </div>
+              {["cutting", "division", "sown_self"].includes(newPlanting.acquisition_source) && plantings.length > 0 && (
+                <>
+                  <div className="sg-form-label">Propagated from (optional)</div>
+                  <div className="sg-draft-row">
+                    <select
+                      value={newPlanting.source_planting_id}
+                      onChange={(e) => setNewPlanting((n) => ({ ...n, source_planting_id: e.target.value }))}
+                    >
+                      <option value="">— none / not tracked —</option>
+                      {plantings.map((p) => <option key={p.id} value={p.id}>{p.nickname}</option>)}
+                    </select>
+                  </div>
+                </>
+              )}
 
               {newPlanting.containerMode === "new" && (
                 <>

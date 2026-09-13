@@ -8,6 +8,9 @@ import { labelForEventType, isAlertEvent, describeEventPayload } from "../lib/ev
 import { GenericPlantImage } from "./PlantCard.jsx";
 import { EventIcon } from "./EventIcon.jsx";
 import { LogEntryForm } from "./LogEntryForm.jsx";
+import { GitBranch } from "lucide-react";
+import { getParentPlanting, getChildPlantings } from "../lib/lineage.js";
+import { ContainerHistoryPanel } from "./ContainerHistoryPanel.jsx";
 
 /**
  * The "zoom in" screen for a single plant, reached by tapping its card in
@@ -43,6 +46,8 @@ export function PlantDetail({ planting, plantings, containers, events, garden, a
     }
   };
 
+  const parent = getParentPlanting(planting, plantings, events);
+  const children = getChildPlantings(planting, plantings, events);
   const siblings = container
     ? (plantings || [])
       .filter((p) => p.id !== planting.id)
@@ -93,6 +98,10 @@ export function PlantDetail({ planting, plantings, containers, events, garden, a
         </div>
       )}
 
+      {container && (
+        <ContainerHistoryPanel container={container} plantings={plantings} events={events} onSelectPlanting={onSelectPlanting} />
+      )}
+
       {siblings.length > 0 && (
         <div className="sg-siblings-section">
           <h2>Also in this container</h2>
@@ -109,6 +118,32 @@ export function PlantDetail({ planting, plantings, containers, events, garden, a
               );
             })}
           </div>
+        </div>
+      )}
+      {(parent || children.length > 0) && (
+        <div className="sg-lineage">
+          {parent && (
+            <div className="sg-lineage-row">
+              <GitBranch size={13} />
+              <span>Propagated from{" "}
+                <button type="button" className="sg-entity-link" onClick={() => onSelectPlanting?.(parent.id)}>{parent.nickname}</button>
+              </span>
+            </div>
+          )}
+          {children.length > 0 && (
+            <div className="sg-lineage-row">
+              <GitBranch size={13} />
+              <span>
+                Propagated to{" "}
+                {children.map((child, i) => (
+                  <span key={child.id}>
+                    <button type="button" className="sg-entity-link" onClick={() => onSelectPlanting?.(child.id)}>{child.nickname}</button>
+                    {i < children.length - 1 ? ", " : ""}
+                  </span>
+                ))}
+              </span>
+            </div>
+          )}
         </div>
       )}
 

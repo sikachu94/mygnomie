@@ -1,6 +1,12 @@
 import { useState } from "react";
 import { Umbrella, Home, CloudSun, X, Loader2 } from "lucide-react";
 
+const TRIGGER_COPY = {
+    frost: (s) => `${s === "hard" ? "Hard frost" : "Light frost"} tonight — protect anything?`,
+    heat: (s) => `${s === "severe" ? "Extreme heat" : "A hot day"} today — anything need shade or a move?`,
+    wind: (s) => `${s === "severe" ? "Strong winds" : "Windy conditions"} today — anything need securing?`,
+    hail: () => "Hail in the forecast — cover anything exposed?",
+};
 /**
  * One-tap follow-up shown right after a frost gets auto-logged. Lets the
  * gardener say what they actually did about it — closing the loop the
@@ -25,28 +31,19 @@ export function WeatherProtectionPrompt({ prompt, containers, onLog, onDismiss }
 
     const act = async (action) => {
         setSaving(action);
-        try {
-            await onLog(Array.from(selected), action);
-        } finally {
-            setSaving(null);
-        }
+        try { await onLog(Array.from(selected), action); } finally { setSaving(null); }
     };
 
     return (
         <div className="sg-frost-prompt">
             <div className="sg-frost-prompt-head">
-                <span>{prompt.severity === "hard" ? "Hard frost" : "Light frost"} tonight — protect anything?</span>
+                <span>{(TRIGGER_COPY[prompt.trigger] || (() => "Weather alert — protect anything?"))(prompt.severity)}</span>
                 <button className="sg-icon-btn" onClick={onDismiss} aria-label="Dismiss"><X size={14} /></button>
             </div>
             {containers.length > 1 && (
                 <div className="sg-target-chips">
                     {containers.map((c) => (
-                        <button
-                            key={c.id} type="button"
-                            className={`sg-chip${selected.has(c.id) ? " active" : ""}`}
-                            aria-pressed={selected.has(c.id)}
-                            onClick={() => toggle(c.id)}
-                        >
+                        <button key={c.id} type="button" className={`sg-chip${selected.has(c.id) ? " active" : ""}`} aria-pressed={selected.has(c.id)} onClick={() => toggle(c.id)}>
                             {c.name}
                         </button>
                     ))}

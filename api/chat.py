@@ -172,7 +172,7 @@ def garden_chat(req: ChatRequest, user_id: str = Depends(get_current_user), db =
         "pest_sighting, disease_sighting, pest_treatment, disease_treatment, inspection, photo_log, "
         "transplanted, germination, thinning (all entity_type \"planting\"); relocated, soil_amended, "
         "weeding, soil_test, weather_protection (entity_type \"container\" — this includes raised beds "
-        "and in-ground plots, not just pots); rainfall, frost, garden_event (entity_type \"garden\").\n"
+        "and in-ground plots, not just pots); rainfall, frost, weather_event, garden_event (entity_type \"garden\").\n"
         "- germination/thinning cover a from-seed planting's early growth (sprouting, thinning excess "
         "seedlings). soil_test is a pH/moisture reading; soil_amended is for actually changing the soil. "
         "weather_protection is what the gardener did in response to weather (covering, moving indoors, "

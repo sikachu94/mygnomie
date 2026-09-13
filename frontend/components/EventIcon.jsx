@@ -1,9 +1,11 @@
 import {
   Droplets, Scissors, Bug, CloudRain, Snowflake, Camera, Ruler, NotebookPen, Sparkles,
   FlaskConical, Leaf, ShieldCheck, Stethoscope, Eye, Shovel, Move, Layers, ArrowRightLeft,
-  Thermometer, Umbrella, Sprout, MinusCircle,
+  Thermometer, Umbrella, Sprout, MinusCircle, Sun, Wind, CloudLightning,
 } from "lucide-react";
 import { isAlertEvent } from "../lib/events.js";
+
+const WEATHER_SUBTYPE_ICON = { heat: Sun, wind: Wind, hail: CloudLightning };
 
 const ICON_BY_TYPE = {
   watering: Droplets,
@@ -43,8 +45,9 @@ const STAMP_COLOR_BY_TYPE = {
   soil_test: "gold",
 };
 
-export function EventIcon({ type, size = 34 }) {
-  const Icon = ICON_BY_TYPE[type] || Sparkles;
+export function EventIcon({ type, payload, size = 34 }) {
+  const subtypeIcon = type === "weather_event" ? WEATHER_SUBTYPE_ICON[payload?.subtype] : null;
+  const Icon = subtypeIcon || ICON_BY_TYPE[type] || Sparkles;
   const color = isAlertEvent(type) ? "clay" : STAMP_COLOR_BY_TYPE[type] || "moss";
   return (
     <div className={`sg-stamp sg-stamp-${color}`} style={{ width: size, height: size, minWidth: size }}>

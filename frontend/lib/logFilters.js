@@ -20,16 +20,17 @@ export const CATEGORY_LABELS = {
 export const CATEGORIES = ["action", "measurement", "observation", "lifecycle"];
 
 // "Something's wrong" event types the andon board tracks.
-const ISSUE_EVENT_TYPES = ["pest_sighting", "disease_sighting", "frost"];
+const ISSUE_EVENT_TYPES = ["pest_sighting", "disease_sighting", "frost", "weather_event"];
 
-// Pairs each issue type with the event type that resolves it. frost has no
-// counterpart yet (weather_protection is a future addition) so it keeps the
-// old "most recent sighting is always open" behavior; pest/disease sightings
-// now close once a matching treatment postdates them.
 const TREATMENT_EVENT_TYPE_BY_ISSUE = {
   pest_sighting: "pest_treatment",
   disease_sighting: "disease_treatment",
+  frost: "weather_protection",
+  weather_event: "weather_protection",
 };
+
+const WEATHER_ISSUE_EVENT_TYPES = new Set(["frost", "weather_event"]);
+
 
 // Below this run length, same-type entries just render individually —
 // the "3 waterings" example in the brief implies 1-2 in a row isn't noise yet.
@@ -70,13 +71,15 @@ export function findOpenIssues(events) {
   for (const issue of latestByKey.values()) {
     const treatmentType = TREATMENT_EVENT_TYPE_BY_ISSUE[issue.event_type];
     if (treatmentType) {
-      const treated = events.some(
-        (e) =>
-          e.event_type === treatmentType &&
-          e.entity_type === issue.entity_type &&
-          e.entity_id === issue.entity_id &&
-          new Date(e.timestamp) > new Date(issue.timestamp)
-      );
+      const treated = WEATHER_ISSUE_EVENT_TYPES.has(issue.event_type)
+        ? events.some((e) => e.event_type === treatmentType && e.garden_id === issue.garden_id && new Date(e.timestamp) > new Date(issue.timestamp))
+        : events.some(
+            (e) =>
+              e.event_type === treatmentType &&
+              e.entity_type === issue.entity_type &&
+              e.entity_id === issue.entity_id &&
+              new Date(e.timestamp) > new Date(issue.timestamp)
+          );
       if (treated) continue;
     }
     openIssues.push(issue);

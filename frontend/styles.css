@@ -2047,3 +2047,68 @@ body,
 .sg-calendar-task-icon.fertilizing {
   color: #6B7F3A;
 }
+
+.sg-lineage {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 12.5px;
+  color: var(--muted);
+  margin: 0 0 16px;
+}
+
+.sg-lineage-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+
+.sg-entity-link {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--moss-dark);
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-color: var(--line);
+  cursor: pointer;
+  font: inherit;
+}
+
+.sg-entity-link:hover {
+  text-decoration-color: var(--moss);
+}
+
+.sg-container-history {
+  margin: 0 0 16px;
+}
+
+.sg-container-history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+  padding: 10px 12px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+
+.sg-container-history-row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-bottom: 8px;
+  border-bottom: 1px dotted var(--line);
+}
+
+.sg-container-history-row:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.sg-container-history-meta {
+  font-size: 11.5px;
+  color: var(--muted);
+}

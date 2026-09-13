@@ -91,7 +91,8 @@ as raised beds and in-ground garden plots, not just potted containers:
   relocated, soil_amended, weeding, soil_test, weather_protection
 
 Garden-scoped (leave both planting_id and container_id null):
-  rainfall, frost, garden_event
+rainfall, frost, weather_event, garden_event
+    - weather_event covers heat, wind, or hail (payload subtype); rainfall and frost stay their own types.
 
 Respond with ONLY a JSON object matching this schema, no prose, no markdown fences:
 {json.dumps(schema)}

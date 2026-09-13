@@ -7,6 +7,7 @@ import {
 import { fileToDataUrl } from "../lib/imageUtils.js";
 import { buildReminders, pickPriorityPlanting } from "../lib/reminders.js";
 import { EventIcon } from "./EventIcon.jsx";
+import { getChipUsage, recordChipUsage, sortByUsage } from "../lib/chipUsage.js";
 
 function defaultTargetsForType(type, plantings, events, weather) {
     // Container-scoped types (relocated, soil_amended, weeding) have no
@@ -53,8 +54,9 @@ export function LogEntryForm({
     editingEvent, onDoneEditing,
 }) {
     const isEditing = !!editingEvent;
+
     const availableTypes = MANUAL_ENTRY_TYPES.filter((t) => !lockedPlantingId || scopeOf(t) !== "garden");
-    const primaryTypes = MANUAL_ENTRY_PRIMARY.filter((t) => availableTypes.includes(t));
+    const primaryTypes = sortByUsage(MANUAL_ENTRY_PRIMARY.filter((t) => availableTypes.includes(t)), usageCounts);
     const moreGroups = MANUAL_ENTRY_MORE_GROUPS
         .map((g) => ({ ...g, types: g.types.filter((t) => availableTypes.includes(t)) }))
         .filter((g) => g.types.length > 0);
@@ -100,7 +102,8 @@ export function LogEntryForm({
         if (formOpen && type === nextType) { closeForm(); return; }
         openForType(nextType);
     };
-
+    const [usageCounts, setUsageCounts] = useState({});
+    useEffect(() => { getChipUsage().then(setUsageCounts); }, []);
     // Keep a sensible default target selected as the plant list loads in —
     // skipped when locked to one plant/container, or for container-scoped
     // types (no reminder signal to default from yet).
@@ -174,6 +177,7 @@ export function LogEntryForm({
                 payload, note: note.trim(), media: photo ? [photo] : undefined,
             });
             await addEvent(built);
+            if (!isEditing) recordChipUsage(type);
             notify?.(
                 gardenScoped
                     ? "Logged for the whole garden."
