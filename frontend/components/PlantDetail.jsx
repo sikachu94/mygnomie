@@ -166,6 +166,7 @@ export function PlantDetail({ planting, plantings, containers, events, garden, a
       <p className="sg-form-label" style={{ margin: "18px 0 8px" }}>Log entry</p>
       <LogEntryForm
         gardenId={garden?.id} lockedPlantingId={planting.id}
+        containers={containers} lockedContainerId={container?.id}
         addEvent={addEvent} updateEvent={updateEvent} notify={notify}
         editingEvent={editingEvent} onDoneEditing={() => setEditingEvent(null)}
       />

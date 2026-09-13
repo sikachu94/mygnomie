@@ -148,6 +148,12 @@ export function useGardenData(authEnabled = true) {
         entity_type: "planting", entity_id: task.planting_id, category: "action", source: "self",
         event_type: "watering", payload: {}, confidence: "observed",
       });
+    } else if (task.type === "fertilizing") {
+      await addEvent({
+        id: uid("evt"), timestamp: new Date().toISOString(), garden_id: gardenId,
+        entity_type: "planting", entity_id: task.planting_id, category: "action", source: "self",
+        event_type: "fertilizing", payload: {}, confidence: "observed",
+      });
     }
     await updateCalendarTask({ ...task, status: "completed" });
   }, [addEvent, gardenId, updateCalendarTask]);

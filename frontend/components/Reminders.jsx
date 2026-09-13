@@ -1,13 +1,13 @@
-import { Droplets, Scissors, Bug, CircleCheck as CheckCircle2 } from "lucide-react";
+import { Droplets, Scissors, Bug, FlaskConical, CircleCheck as CheckCircle2 } from "lucide-react";
 
-const ICON = { water: Droplets, harvest: Scissors, issue: Bug };
+const ICON = { water: Droplets, harvest: Scissors, issue: Bug, fertilize: FlaskConical };
 
-export function Reminders({ reminders, onLogWatering }) {
+export function Reminders({ reminders, onLogWatering, onLogFertilizing }) {
   if (!reminders || reminders.length === 0) {
     return (
       <div className="sg-reminders-done">
         <CheckCircle2 size={16} />
-        <span>uneventful garden</span>
+        <span>All caught up — nothing needs attention right now.</span>
       </div>
     );
   }
@@ -26,6 +26,11 @@ export function Reminders({ reminders, onLogWatering }) {
             {r.kind === "water" && onLogWatering && (
               <button className="sg-secondary sm" onClick={() => onLogWatering(r.planting_id)}>
                 <Droplets size={12} /> Watered
+              </button>
+            )}
+            {r.kind === "fertilize" && onLogFertilizing && (
+              <button className="sg-secondary sm" onClick={() => onLogFertilizing(r.planting_id)}>
+                <FlaskConical size={12} /> Fed
               </button>
             )}
           </div>

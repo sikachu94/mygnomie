@@ -52,10 +52,17 @@ export function generateCalendarTasks(plantings, events, existingTasks = [], tod
     if (existingWatering) generated.push(existingWatering);
     if (!existingWatering || (existingWatering.status === "completed" && projection.last_watered_at && toDateKey(projection.last_watered_at) >= existingWatering.due_date)) {
       const baseDate = projection.last_watered_at ? toDateKey(projection.last_watered_at) : toDateKey(planting.started_at);
-      const dueDate = projection.last_watered_at
-        ? addDays(baseDate, meta.water_frequency_days)
-        : addDays(baseDate, meta.water_frequency_days);
+      const dueDate = addDays(baseDate, meta.water_frequency_days);
       generated.push(nextTask(planting, "watering", dueDate < today ? today : dueDate, "watering_cadence", today));
+    }
+
+    const fertilizeKey = `${planting.id}:fertilizing`;
+    const existingFertilize = existingByKey.get(fertilizeKey);
+    if (existingFertilize) generated.push(existingFertilize);
+    if (!existingFertilize || (existingFertilize.status === "completed" && projection.last_fertilized_at && toDateKey(projection.last_fertilized_at) >= existingFertilize.due_date)) {
+      const baseDate = projection.last_fertilized_at ? toDateKey(projection.last_fertilized_at) : toDateKey(planting.started_at);
+      const dueDate = addDays(baseDate, meta.fertilize_frequency_days);
+      generated.push(nextTask(planting, "fertilizing", dueDate < today ? today : dueDate, "fertilize_cadence", today));
     }
 
     const harvestKey = `${planting.id}:harvest`;

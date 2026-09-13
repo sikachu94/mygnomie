@@ -6,11 +6,12 @@
  *
  * That table has real ecological data (moisture use, drought/shade
  * tolerance, precipitation range, growth habit, harvest type) but no
- * ready-made "water every N days" / "N hours of sun" / "which stage means
- * ready to harvest" fields — those are inferred here from the closest
- * available signals. These are deliberately rough estimates, not
- * horticultural fact — reasonable enough to drive reminders/badges without
- * silently doing nothing, not precise enough to promise a gardener.
+ * ready-made "water every N days" / "feed every N days" / "N hours of sun" /
+ * "which stage means ready to harvest" fields — those are inferred here
+ * from the closest available signals. These are deliberately rough
+ * estimates, not horticultural fact — reasonable enough to drive
+ * reminders/badges without silently doing nothing, not precise enough to
+ * promise a gardener.
  *
  * NOTE: the category values below (e.g. "high"/"medium"/"low" for
  * moisture_use, "intolerant"/"intermediate"/"tolerant" for shade_tolerance)
@@ -54,6 +55,21 @@ const FLOWERING_SIGNAL_BY_HARVEST_TYPE = {
   // bolt and decline, woody ones like rosemary largely don't.
 };
 
+// harvest_type -> roughly how often to feed a potted plant, in days. Every
+// container-fertilizing source consulted converged on "weekly-ish for heavy
+// (fruiting) feeders, every 2-4 weeks for everything else" — this maps that
+// onto the same harvest_type signal used for watering/target-stage above,
+// rather than inventing a new axis.
+const FERTILIZE_BY_HARVEST_TYPE = {
+  fruit: 10,
+  seed_grain: 14,
+  flower_bud: 14,
+  ornamental_flower: 14,
+  leaf: 18,
+  root: 21,
+  ornamental_foliage: 21,
+};
+
 const WOODY_GROWTH_HABIT = /shrub|tree/i;
 
 function lower(value) {
@@ -77,6 +93,10 @@ function estimateWaterFrequencyDays(info) {
   return 3; // no signal at all — reasonable generic default for a potted plant
 }
 
+function estimateFertilizeFrequencyDays(info) {
+  return FERTILIZE_BY_HARVEST_TYPE[lower(info?.harvest_type)] || 14; // generic 2-week default
+}
+
 function estimateSunHours(info) {
   return SUN_HOURS_BY_SHADE_TOLERANCE[lower(info?.shade_tolerance)] || [4, 6];
 }
@@ -96,12 +116,14 @@ function estimateFloweringSignal(info) {
 /**
  * Drop-in replacement for `SPECIES_META[planting.species]`. Pass
  * `planting.species_info` (the DB-backed reference data) in; returns the
- * same shape SPECIES_META entries had, minus `days_to_maturity`.
+ * same shape SPECIES_META entries had, minus `days_to_maturity`, plus
+ * `fertilize_frequency_days`.
  */
 export function estimateSpeciesReference(speciesInfo) {
   if (!speciesInfo) return null;
   return {
     water_frequency_days: estimateWaterFrequencyDays(speciesInfo),
+    fertilize_frequency_days: estimateFertilizeFrequencyDays(speciesInfo),
     sun_hours: estimateSunHours(speciesInfo),
     target_stage: estimateTargetStage(speciesInfo),
     flowering_signal: estimateFloweringSignal(speciesInfo),

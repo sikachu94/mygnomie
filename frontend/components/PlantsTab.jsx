@@ -133,6 +133,17 @@ export function PlantsTab({
     } catch (err) { console.error(err); }
   };
 
+  const handleLogFertilizing = async (plantingId) => {
+    if (!addEvent) return;
+    try {
+      await addEvent({
+        id: uid("evt"), timestamp: new Date().toISOString(), garden_id: garden?.id,
+        entity_type: "planting", entity_id: plantingId, category: "action", source: "self",
+        event_type: "fertilizing", payload: {}, confidence: "observed",
+      });
+    } catch (err) { console.error(err); }
+  };
+
   const selectedPlanting = plantings.find((p) => p.id === selectedPlantingId);
   if (selectedPlanting) {
     return (
@@ -252,7 +263,7 @@ export function PlantsTab({
       {plantings.length > 0 && (
         <div className="sg-reminders-section">
           <h2>Needs attention</h2>
-          <Reminders reminders={reminders} onLogWatering={handleLogWatering} />
+          <Reminders reminders={reminders} onLogWatering={handleLogWatering} onLogFertilizing={handleLogFertilizing} />
         </div>
       )}
 

@@ -1,10 +1,10 @@
 import { useMemo, useState } from "react";
-import { ChevronLeft, ChevronRight, Check, Clock3, Droplets, Scissors, SkipForward } from "lucide-react";
+import { ChevronLeft, ChevronRight, Check, Clock3, Droplets, Scissors, FlaskConical, SkipForward } from "lucide-react";
 import { generateCalendarTasks, getMonthDays, groupCalendarItems, shiftTaskDate } from "../lib/calendar.js";
 import { EVENT_TYPE_LABELS, labelForEntity } from "../lib/events.js";
 
-const TYPE_ICON = { watering: Droplets, harvest: Scissors };
-const TYPE_LABEL = { watering: "Water", harvest: "Harvest" };
+const TYPE_ICON = { watering: Droplets, harvest: Scissors, fertilizing: FlaskConical };
+const TYPE_LABEL = { watering: "Water", harvest: "Harvest", fertilizing: "Feed" };
 const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 function dateKey(date) { return date.toISOString().slice(0, 10); }

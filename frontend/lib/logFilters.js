@@ -19,10 +19,17 @@ export const CATEGORY_LABELS = {
 
 export const CATEGORIES = ["action", "measurement", "observation", "lifecycle"];
 
-// There's no explicit "resolved" flag on events yet, so — same heuristic
-// reminders.js already uses for a planting's open_issue — the most recent
-// pest/disease/frost event for a subject is treated as still open.
+// "Something's wrong" event types the andon board tracks.
 const ISSUE_EVENT_TYPES = ["pest_sighting", "disease_sighting", "frost"];
+
+// Pairs each issue type with the event type that resolves it. frost has no
+// counterpart yet (weather_protection is a future addition) so it keeps the
+// old "most recent sighting is always open" behavior; pest/disease sightings
+// now close once a matching treatment postdates them.
+const TREATMENT_EVENT_TYPE_BY_ISSUE = {
+  pest_sighting: "pest_treatment",
+  disease_sighting: "disease_treatment",
+};
 
 // Below this run length, same-type entries just render individually —
 // the "3 waterings" example in the brief implies 1-2 in a row isn't noise yet.
@@ -40,7 +47,14 @@ export function buildSubjectFacets(events, plantings, containers) {
   return Array.from(seen.values()).sort((a, b) => a.name.localeCompare(b.name));
 }
 
-/** Most recent pest/disease/frost event per (entity, event_type) — the andon board. */
+/**
+ * Most recent pest/disease/frost event per (entity, event_type) — the andon
+ * board — minus any that have since been treated. An issue is "open" only
+ * while its latest sighting is newer than the latest matching treatment for
+ * that same entity; if a treatment postdates the sighting, it's dropped from
+ * the list. Same "most recent wins" pattern used throughout projections.js,
+ * just checked against two event types instead of one.
+ */
 export function findOpenIssues(events) {
   const latestByKey = new Map();
   for (const event of events) {
@@ -51,7 +65,23 @@ export function findOpenIssues(events) {
       latestByKey.set(key, event);
     }
   }
-  return Array.from(latestByKey.values()).sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+  const openIssues = [];
+  for (const issue of latestByKey.values()) {
+    const treatmentType = TREATMENT_EVENT_TYPE_BY_ISSUE[issue.event_type];
+    if (treatmentType) {
+      const treated = events.some(
+        (e) =>
+          e.event_type === treatmentType &&
+          e.entity_type === issue.entity_type &&
+          e.entity_id === issue.entity_id &&
+          new Date(e.timestamp) > new Date(issue.timestamp)
+      );
+      if (treated) continue;
+    }
+    openIssues.push(issue);
+  }
+  return openIssues.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
 }
 
 /**

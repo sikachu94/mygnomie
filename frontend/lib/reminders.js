@@ -49,6 +49,30 @@ export function buildReminders(plantings, events, weather) {
       }
     }
 
+    if (proj.last_fertilized_at) {
+      const daysSinceFeed = Math.floor((Date.now() - new Date(proj.last_fertilized_at).getTime()) / DAY_MS);
+      if (daysSinceFeed >= meta.fertilize_frequency_days) {
+        reminders.push({
+          planting_id: planting.id,
+          nickname: planting.nickname,
+          kind: "fertilize",
+          title: `Feed ${planting.nickname}`,
+          detail: `Last fed ${fmtDate(proj.last_fertilized_at)} — about ${daysSinceFeed} days ago.`,
+        });
+      }
+    } else {
+      const age = proj.days_since_entry;
+      if (age >= meta.fertilize_frequency_days) {
+        reminders.push({
+          planting_id: planting.id,
+          nickname: planting.nickname,
+          kind: "fertilize",
+          title: `Feed ${planting.nickname}`,
+          detail: `No feeding logged yet, and it's been ${age} days since planting.`,
+        });
+      }
+    }
+
     if (meta.flowering_signal === "decline_warning" && proj.stage === "flowering") {
       reminders.push({
         planting_id: planting.id,
@@ -61,26 +85,27 @@ export function buildReminders(plantings, events, weather) {
 
     if (proj.open_issue) {
       const pest = proj.open_issue.payload?.pest || proj.open_issue.payload?.disease;
+      const daysSince = Math.floor((Date.now() - new Date(proj.open_issue.timestamp).getTime()) / DAY_MS);
       reminders.push({
         planting_id: planting.id,
         nickname: planting.nickname,
         kind: "issue",
         title: `Check ${planting.nickname} for ${pest || "a problem"}`,
-        detail: `Last reported ${fmtDate(proj.open_issue.timestamp)} — ${proj.open_issue.payload?.severity || "unspecified"} severity.`,
+        detail: `Spotted ${daysSince} day${daysSince === 1 ? "" : "s"} ago, ${proj.open_issue.payload?.severity || "unspecified"} severity — no treatment logged yet.`,
       });
     }
   }
 
-  const order = { issue: 0, harvest: 1, water: 2 };
+  const order = { issue: 0, harvest: 1, water: 2, fertilize: 3 };
   return reminders.sort((a, b) => (order[a.kind] ?? 9) - (order[b.kind] ?? 9));
 }
 
 /**
  * Returns the single planting a one-tap quick action ("Water") should
  * target: whichever plant buildReminders would flag first (issue > harvest
- * > water, its existing priority order). If nothing is currently flagged,
- * falls back to whichever active planting has gone longest without a
- * watering log — never surfaces an ended planting.
+ * > water > fertilize, its existing priority order). If nothing is
+ * currently flagged, falls back to whichever active planting has gone
+ * longest without a watering log — never surfaces an ended planting.
  */
 export function pickPriorityPlanting(plantings, events, weather) {
   const reminders = buildReminders(plantings, events, weather);
