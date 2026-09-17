@@ -4,6 +4,17 @@ import { uid } from "../lib/format.js";
 import { fileToDataUrl } from "../lib/imageUtils.js";
 import { GARDEN_ID, DEFAULT_GARDEN } from "../lib/seedData.js";
 import { apiGardens, apiCreateEvent, apiCreatePlanting, apiUpdateGarden, apiCreateGarden, apiDeleteGarden, apiUpdateEvent, apiDeleteEvent } from "../api.js";
+
+// Local-storage key for "which garden was this browser last looking at".
+// Needed because api/gardens.py's list_gardens has no ORDER BY, so Postgres/
+// PostgREST make no promise about row order across requests — falling back
+// to list[0] on every load can silently swap the user into a *different*
+// garden than the one they were just using (e.g. after adding a bunch of
+// plantings changes the table's physical layout). Remembering the id here
+// makes garden selection sticky across reloads / app resume instead of
+// re-guessing it from an unordered list every time.
+const LAST_GARDEN_KEY = "lastGardenId";
+
 /**
  * Owns plantings/containers/events/garden state and their persistence.
  * Supabase is the source of truth. Local storage is only used as an offline
@@ -51,6 +62,13 @@ export function useGardenData(authEnabled = true) {
     setCalendarTasks(storedTasks ? JSON.parse(storedTasks.value) : []);
     await persist(data.plantings || [], data.events || [], data.containers || []);
     await persistGarden(nextGarden);
+    // Every code path that changes "the garden currently being shown" goes
+    // through applyGarden, so recording the choice here — not just in the
+    // initial-load effect — is what keeps switchGarden / createGarden /
+    // deleteGarden selections sticky too, not only the first load.
+    if (nextGarden.id) {
+      try { await storageSet(LAST_GARDEN_KEY, nextGarden.id); } catch (err) { console.error(err); }
+    }
   }, [persist, persistGarden]);
 
   useEffect(() => {
@@ -74,7 +92,23 @@ export function useGardenData(authEnabled = true) {
         // Keep the switcher (and anything else relying on allGardens) in
         // sync from the very first load, not just after create/delete.
         setAllGardens(list);
-        const remoteGarden = list.find((item) => item.id === GARDEN_ID) || list[0];
+
+        // Garden selection priority:
+        //   1. Whichever garden this browser was last looking at (sticky
+        //      across reloads/app resume — see LAST_GARDEN_KEY above).
+        //   2. The legacy single-dev-user GARDEN_ID, if it happens to match.
+        //   3. list[0] — a last resort only, since the backend gives no
+        //      ordering guarantee and this can pick a different garden on
+        //      every load if left as the primary path.
+        let remoteGarden = null;
+        try {
+          const stored = await storageGet(LAST_GARDEN_KEY);
+          if (stored?.value) remoteGarden = list.find((item) => item.id === stored.value) || null;
+        } catch {
+          // no-op — fall through to the other selection strategies below
+        }
+        if (!remoteGarden) remoteGarden = list.find((item) => item.id === GARDEN_ID) || list[0];
+
         if (!remoteGarden) throw new Error("No garden was returned by the API for this account");
         await applyGarden(remoteGarden);
         setLoadError(null);

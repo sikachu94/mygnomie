@@ -59,12 +59,15 @@ def list_gardens(user_id: str = Depends(get_current_user), db = Depends(get_db))
         db.table("gardens")
         .select("id, name, type, location, timezone, established_at, notes, hardiness_zone, hardiness_zone_temp_range_f, hardiness_zone_updated_at")
         .eq("user_id", user_id)
+        .order("established_at")   # <-- was missing; without this, Postgres/PostgREST
+                                #     can return rows in any order, so list[0] in
+                                #     useGardenData.js's fallback was picking a
+                                #     different garden across reloads.
         .execute()
         .data
     )
-
-    if not gardens:
-        gardens = [_ensure_default_garden(db, user_id)]
+    # if not gardens:
+    #     gardens = [_ensure_default_garden(db, user_id)]
 
     garden_ids = [garden["id"] for garden in gardens]
 
